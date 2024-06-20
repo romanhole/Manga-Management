@@ -5,7 +5,6 @@ public class MangaDatabase {
     private static final String DATA_FILE = "mangas.dat";
     private static final String INDEX_FILE = "mangas.idx";
     private static final String TITLE_INDEX_FILE = "titles.idx";
-    private static final int RECORD_SIZE = 413; // Tamanho fixo do registro
 
     public void createManga(Manga manga) throws IOException {
         try (RandomAccessFile dataFile = new RandomAccessFile(DATA_FILE, "rw");
@@ -125,9 +124,9 @@ public class MangaDatabase {
         file.writeUTF(padString(manga.getEditora(), 30));
         file.writeInt(manga.getAnoEdicao());
         file.writeInt(manga.getQuantidadeVolumes());
-        file.writeInt(manga.getQuantidadeVolumesAdquiridos());
-        for (int i = 0; i < 100; i++) {
-            file.writeInt(i < manga.getVolumesAdquiridos().length ? manga.getVolumesAdquiridos()[i] : 0);
+        file.writeInt(manga.getVolumesAdquiridos().size());
+        for (int volume : manga.getVolumesAdquiridos()) {
+            file.writeInt(volume);
         }
     }
 
@@ -143,11 +142,11 @@ public class MangaDatabase {
         int anoEdicao = file.readInt();
         int quantidadeVolumes = file.readInt();
         int quantidadeVolumesAdquiridos = file.readInt();
-        int[] volumesAdquiridos = new int[100];
-        for (int i = 0; i < 100; i++) {
-            volumesAdquiridos[i] = file.readInt();
+        List<Integer> volumesAdquiridos = new ArrayList<>();
+        for (int i = 0; i < quantidadeVolumesAdquiridos; i++) {
+            volumesAdquiridos.add(file.readInt());
         }
-        return new Manga(isbn, titulo, autor, anoInicio, anoFim, genero, revista, editora, anoEdicao, quantidadeVolumes, quantidadeVolumesAdquiridos, volumesAdquiridos);
+        return new Manga(isbn, titulo, autor, anoInicio, anoFim, genero, revista, editora, anoEdicao, quantidadeVolumes, volumesAdquiridos.size(), volumesAdquiridos);
     }
 
     private String padString(String str, int length) {

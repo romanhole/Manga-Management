@@ -3,72 +3,157 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MangaGUI extends JFrame {
-    private JTextField isbnField, tituloField, autorField, anoInicioField, anoFimField, generoField, revistaField, editoraField, anoEdicaoField, quantidadeVolumesField, quantidadeVolumesAdquiridosField, volumesAdquiridosField;
+    private JTextField isbnField, tituloField, autorField, anoInicioField, anoFimField, generoField, revistaField, editoraField, anoEdicaoField, quantidadeVolumesField;
     private JTextArea outputArea;
     private MangaDatabase db;
+    private DefaultListModel<Integer> volumesAdquiridosModel;
+    private JList<Integer> volumesAdquiridosList;
 
     public MangaGUI() {
         db = new MangaDatabase();
 
         setTitle("Gerenciador de Mangás");
-        setSize(800, 600);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new GridLayout(13, 2));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
 
-        panel.add(new JLabel("ISBN:"));
-        isbnField = new JTextField();
-        panel.add(isbnField);
+        // Campos de entrada para dados do mangá
+        inputPanel.add(new JLabel("ISBN:"), gbc);
+        gbc.gridx++;
+        isbnField = new JTextField(20);
+        inputPanel.add(isbnField, gbc);
 
-        panel.add(new JLabel("Título:"));
-        tituloField = new JTextField();
-        panel.add(tituloField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Título:"), gbc);
+        gbc.gridx++;
+        tituloField = new JTextField(30);
+        inputPanel.add(tituloField, gbc);
 
-        panel.add(new JLabel("Autor:"));
-        autorField = new JTextField();
-        panel.add(autorField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Autor:"), gbc);
+        gbc.gridx++;
+        autorField = new JTextField(30);
+        inputPanel.add(autorField, gbc);
 
-        panel.add(new JLabel("Ano de Início:"));
-        anoInicioField = new JTextField();
-        panel.add(anoInicioField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Ano de Início:"), gbc);
+        gbc.gridx++;
+        anoInicioField = new JTextField(10);
+        inputPanel.add(anoInicioField, gbc);
 
-        panel.add(new JLabel("Ano de Fim:"));
-        anoFimField = new JTextField();
-        panel.add(anoFimField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Ano de Fim:"), gbc);
+        gbc.gridx++;
+        anoFimField = new JTextField(10);
+        inputPanel.add(anoFimField, gbc);
 
-        panel.add(new JLabel("Gênero:"));
-        generoField = new JTextField();
-        panel.add(generoField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Gênero:"), gbc);
+        gbc.gridx++;
+        generoField = new JTextField(20);
+        inputPanel.add(generoField, gbc);
 
-        panel.add(new JLabel("Revista:"));
-        revistaField = new JTextField();
-        panel.add(revistaField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Revista:"), gbc);
+        gbc.gridx++;
+        revistaField = new JTextField(20);
+        inputPanel.add(revistaField, gbc);
 
-        panel.add(new JLabel("Editora:"));
-        editoraField = new JTextField();
-        panel.add(editoraField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Editora:"), gbc);
+        gbc.gridx++;
+        editoraField = new JTextField(20);
+        inputPanel.add(editoraField, gbc);
 
-        panel.add(new JLabel("Ano da Edição:"));
-        anoEdicaoField = new JTextField();
-        panel.add(anoEdicaoField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Ano da Edição:"), gbc);
+        gbc.gridx++;
+        anoEdicaoField = new JTextField(10);
+        inputPanel.add(anoEdicaoField, gbc);
 
-        panel.add(new JLabel("Quantidade de Volumes:"));
-        quantidadeVolumesField = new JTextField();
-        panel.add(quantidadeVolumesField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Quantidade de Volumes:"), gbc);
+        gbc.gridx++;
+        quantidadeVolumesField = new JTextField(10);
+        inputPanel.add(quantidadeVolumesField, gbc);
 
-        panel.add(new JLabel("Quantidade de Volumes Adquiridos:"));
-        quantidadeVolumesAdquiridosField = new JTextField();
-        panel.add(quantidadeVolumesAdquiridosField);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        inputPanel.add(new JLabel("Volumes Adquiridos:"), gbc);
+        gbc.gridx++;
+        volumesAdquiridosModel = new DefaultListModel<>();
+        volumesAdquiridosList = new JList<>(volumesAdquiridosModel);
+        inputPanel.add(new JScrollPane(volumesAdquiridosList), gbc);
 
-        panel.add(new JLabel("Volumes Adquiridos (separados por espaço):"));
-        volumesAdquiridosField = new JTextField();
-        panel.add(volumesAdquiridosField);
+        JPanel volumesAdquiridosPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JTextField volumeField = new JTextField(10);
+        volumesAdquiridosPanel.add(volumeField, gbc);
 
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        JButton addVolumeButton = new JButton("Adicionar Volume");
+        addVolumeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int volume = Integer.parseInt(volumeField.getText().trim());
+                    volumesAdquiridosModel.addElement(volume);
+                    volumeField.setText("");
+                } catch (NumberFormatException ex) {
+                    showMessage("Volume deve ser um número.");
+                }
+            }
+        });
+        volumesAdquiridosPanel.add(addVolumeButton, gbc);
+
+        gbc.gridx++;
+        JButton removeVolumeButton = new JButton("Remover Volume");
+        removeVolumeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedIndex = volumesAdquiridosList.getSelectedIndex();
+                if (selectedIndex != -1) {
+                    volumesAdquiridosModel.remove(selectedIndex);
+                } else {
+                    showMessage("Selecione um volume para remover.");
+                }
+            }
+        });
+        volumesAdquiridosPanel.add(removeVolumeButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        inputPanel.add(volumesAdquiridosPanel, gbc);
+
+        // Botões de ação
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton addButton = new JButton("Adicionar Mangá");
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -76,7 +161,7 @@ public class MangaGUI extends JFrame {
                 addManga();
             }
         });
-        panel.add(addButton);
+        buttonPanel.add(addButton);
 
         JButton showAllButton = new JButton("Mostrar Todos os Mangás");
         showAllButton.addActionListener(new ActionListener() {
@@ -85,17 +170,13 @@ public class MangaGUI extends JFrame {
                 showAllMangas();
             }
         });
-        panel.add(showAllButton);
-        add(panel, BorderLayout.NORTH);
+        buttonPanel.add(showAllButton);
 
-        JPanel searchPanel = new JPanel(new GridLayout(2, 1));
-        JPanel isbnPanel = new JPanel(new GridLayout(1, 2));
-        isbnPanel.add(new JLabel("ISBN:"));
-        JTextField searchIsbnField = new JTextField();
-        isbnPanel.add(searchIsbnField);
-        searchPanel.add(isbnPanel);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        searchPanel.add(new JLabel("ISBN:"));
+        JTextField searchIsbnField = new JTextField(20);
+        searchPanel.add(searchIsbnField);
 
-        JPanel buttonsPanel = new JPanel(new GridLayout(1, 3));
         JButton searchButton = new JButton("Pesquisar Mangá");
         searchButton.addActionListener(new ActionListener() {
             @Override
@@ -108,7 +189,7 @@ public class MangaGUI extends JFrame {
                 }
             }
         });
-        buttonsPanel.add(searchButton);
+        searchPanel.add(searchButton);
 
         JButton updateButton = new JButton("Atualizar Mangá");
         updateButton.addActionListener(new ActionListener() {
@@ -122,7 +203,7 @@ public class MangaGUI extends JFrame {
                 }
             }
         });
-        buttonsPanel.add(updateButton);
+        searchPanel.add(updateButton);
 
         JButton deleteButton = new JButton("Deletar Mangá");
         deleteButton.addActionListener(new ActionListener() {
@@ -136,14 +217,18 @@ public class MangaGUI extends JFrame {
                 }
             }
         });
-        buttonsPanel.add(deleteButton);
+        searchPanel.add(deleteButton);
 
-        searchPanel.add(buttonsPanel);
-        add(searchPanel, BorderLayout.CENTER);
+        buttonPanel.add(searchPanel);
 
-        outputArea = new JTextArea();
+        mainPanel.add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        outputArea = new JTextArea(10, 80);
         outputArea.setEditable(false);
-        add(new JScrollPane(outputArea), BorderLayout.SOUTH);
+        mainPanel.add(new JScrollPane(outputArea), BorderLayout.NORTH);
+
+        add(mainPanel, BorderLayout.CENTER);
     }
 
     private void addManga() {
@@ -158,14 +243,12 @@ public class MangaGUI extends JFrame {
             String editora = editoraField.getText().trim();
             int anoEdicao = Integer.parseInt(anoEdicaoField.getText().trim());
             int quantidadeVolumes = Integer.parseInt(quantidadeVolumesField.getText().trim());
-            int quantidadeVolumesAdquiridos = Integer.parseInt(quantidadeVolumesAdquiridosField.getText().trim());
-            String[] volumesAdquiridosStr = volumesAdquiridosField.getText().trim().split(" ");
-            int[] volumesAdquiridos = new int[volumesAdquiridosStr.length];
-            for (int i = 0; i < volumesAdquiridosStr.length; i++) {
-                volumesAdquiridos[i] = Integer.parseInt(volumesAdquiridosStr[i].trim());
+            List<Integer> volumesAdquiridos = new ArrayList<>();
+            for (int i = 0; i < volumesAdquiridosModel.size(); i++) {
+                volumesAdquiridos.add(volumesAdquiridosModel.get(i));
             }
 
-            Manga manga = new Manga(isbn, titulo, autor, anoInicio, anoFim, genero, revista, editora, anoEdicao, quantidadeVolumes, quantidadeVolumesAdquiridos, volumesAdquiridos);
+            Manga manga = new Manga(isbn, titulo, autor, anoInicio, anoFim, genero, revista, editora, anoEdicao, quantidadeVolumes, volumesAdquiridos.size(), volumesAdquiridos);
             db.createManga(manga);
 
             showMessage("Mangá adicionado com sucesso!");
@@ -191,7 +274,7 @@ public class MangaGUI extends JFrame {
                         + "Ano da Edição: " + manga.getAnoEdicao() + "\n"
                         + "Quantidade de Volumes: " + manga.getQuantidadeVolumes() + "\n"
                         + "Quantidade de Volumes Adquiridos: " + manga.getQuantidadeVolumesAdquiridos() + "\n"
-                        + "Volumes Adquiridos: " + Arrays.toString(manga.getVolumesAdquiridos()));
+                        + "Volumes Adquiridos: " + manga.getVolumesAdquiridos().toString());
             } else {
                 showMessage("Mangá não encontrado.");
             }
@@ -206,7 +289,7 @@ public class MangaGUI extends JFrame {
             if (manga != null) {
                 JDialog updateDialog = new JDialog(this, "Atualizar Mangá", true);
                 updateDialog.setSize(400, 600);
-                updateDialog.setLayout(new GridLayout(14, 2));
+                updateDialog.setLayout(new GridLayout(12, 2));
 
                 JTextField tituloField = new JTextField(manga.getTitulo());
                 JTextField autorField = new JTextField(manga.getAutor());
@@ -217,8 +300,11 @@ public class MangaGUI extends JFrame {
                 JTextField editoraField = new JTextField(manga.getEditora());
                 JTextField anoEdicaoField = new JTextField(String.valueOf(manga.getAnoEdicao()));
                 JTextField quantidadeVolumesField = new JTextField(String.valueOf(manga.getQuantidadeVolumes()));
-                JTextField quantidadeVolumesAdquiridosField = new JTextField(String.valueOf(manga.getQuantidadeVolumesAdquiridos()));
-                JTextField volumesAdquiridosField = new JTextField(Arrays.toString(manga.getVolumesAdquiridos()).replaceAll("[\\[\\],]", ""));
+                DefaultListModel<Integer> updateVolumesAdquiridosModel = new DefaultListModel<>();
+                for (int volume : manga.getVolumesAdquiridos()) {
+                    updateVolumesAdquiridosModel.addElement(volume);
+                }
+                JList<Integer> updateVolumesAdquiridosList = new JList<>(updateVolumesAdquiridosModel);
 
                 updateDialog.add(new JLabel("Título:"));
                 updateDialog.add(tituloField);
@@ -247,11 +333,42 @@ public class MangaGUI extends JFrame {
                 updateDialog.add(new JLabel("Quantidade de Volumes:"));
                 updateDialog.add(quantidadeVolumesField);
 
-                updateDialog.add(new JLabel("Quantidade de Volumes Adquiridos:"));
-                updateDialog.add(quantidadeVolumesAdquiridosField);
+                updateDialog.add(new JLabel("Volumes Adquiridos:"));
+                updateDialog.add(new JScrollPane(updateVolumesAdquiridosList));
 
-                updateDialog.add(new JLabel("Volumes Adquiridos (separados por espaço):"));
-                updateDialog.add(volumesAdquiridosField);
+                JPanel updateVolumesAdquiridosPanel = new JPanel(new GridLayout(2, 2));
+                JTextField updateVolumeField = new JTextField();
+                updateVolumesAdquiridosPanel.add(updateVolumeField);
+                JButton updateAddVolumeButton = new JButton("Adicionar Volume");
+                updateAddVolumeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        try {
+                            int volume = Integer.parseInt(updateVolumeField.getText().trim());
+                            updateVolumesAdquiridosModel.addElement(volume);
+                            updateVolumeField.setText("");
+                        } catch (NumberFormatException ex) {
+                            showMessage("Volume deve ser um número.");
+                        }
+                    }
+                });
+                updateVolumesAdquiridosPanel.add(updateAddVolumeButton);
+
+                JButton updateRemoveVolumeButton = new JButton("Remover Volume");
+                updateRemoveVolumeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        int selectedIndex = updateVolumesAdquiridosList.getSelectedIndex();
+                        if (selectedIndex != -1) {
+                            updateVolumesAdquiridosModel.remove(selectedIndex);
+                        } else {
+                            showMessage("Selecione um volume para remover.");
+                        }
+                    }
+                });
+                updateVolumesAdquiridosPanel.add(updateRemoveVolumeButton);
+
+                updateDialog.add(updateVolumesAdquiridosPanel);
 
                 JButton updateButton = new JButton("Atualizar");
                 updateButton.addActionListener(new ActionListener() {
@@ -267,14 +384,12 @@ public class MangaGUI extends JFrame {
                             String newEditora = editoraField.getText().trim();
                             int newAnoEdicao = Integer.parseInt(anoEdicaoField.getText().trim());
                             int newQuantidadeVolumes = Integer.parseInt(quantidadeVolumesField.getText().trim());
-                            int newQuantidadeVolumesAdquiridos = Integer.parseInt(quantidadeVolumesAdquiridosField.getText().trim());
-                            String[] newVolumesAdquiridosStr = volumesAdquiridosField.getText().trim().split(" ");
-                            int[] newVolumesAdquiridos = new int[newVolumesAdquiridosStr.length];
-                            for (int i = 0; i < newVolumesAdquiridosStr.length; i++) {
-                                newVolumesAdquiridos[i] = Integer.parseInt(newVolumesAdquiridosStr[i].trim());
+                            List<Integer> newVolumesAdquiridos = new ArrayList<>();
+                            for (int i = 0; i < updateVolumesAdquiridosModel.size(); i++) {
+                                newVolumesAdquiridos.add(updateVolumesAdquiridosModel.get(i));
                             }
 
-                            Manga updatedManga = new Manga(isbn, newTitulo, newAutor, newAnoInicio, newAnoFim, newGenero, newRevista, newEditora, newAnoEdicao, newQuantidadeVolumes, newQuantidadeVolumesAdquiridos, newVolumesAdquiridos);
+                            Manga updatedManga = new Manga(isbn, newTitulo, newAutor, newAnoInicio, newAnoFim, newGenero, newRevista, newEditora, newAnoEdicao, newQuantidadeVolumes, newVolumesAdquiridos.size(), newVolumesAdquiridos);
                             db.updateManga(isbn, updatedManga);
 
                             updateDialog.dispose();
@@ -328,7 +443,7 @@ public class MangaGUI extends JFrame {
                             .append("Ano da Edição: ").append(manga.getAnoEdicao()).append("\n")
                             .append("Quantidade de Volumes: ").append(manga.getQuantidadeVolumes()).append("\n")
                             .append("Quantidade de Volumes Adquiridos: ").append(manga.getQuantidadeVolumesAdquiridos()).append("\n")
-                            .append("Volumes Adquiridos: ").append(Arrays.toString(manga.getVolumesAdquiridos())).append("\n\n");
+                            .append("Volumes Adquiridos: ").append(manga.getVolumesAdquiridos().toString()).append("\n\n");
                 }
                 outputArea.setText(sb.toString());
             }
