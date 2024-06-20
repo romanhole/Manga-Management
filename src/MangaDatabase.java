@@ -40,8 +40,7 @@ public class MangaDatabase {
                     case 3:
                         System.out.print("Digite o ISBN do mangá a ser atualizado: ");
                         isbn = scanner.nextLine();
-                        Manga updatedManga = getMangaDetails(scanner);
-                        db.updateManga(isbn, updatedManga);
+                        db.updateManga(isbn, scanner);
                         break;
                     case 4:
                         System.out.print("Digite o ISBN do mangá a ser apagado: ");
@@ -107,22 +106,91 @@ public class MangaDatabase {
         return null;
     }
 
-    public void updateManga(String isbn, Manga newManga) throws IOException {
+    public void updateManga(String isbn, Scanner scanner) throws IOException {
         try (RandomAccessFile dataFile = new RandomAccessFile(DATA_FILE, "rw");
              RandomAccessFile indexFile = new RandomAccessFile(INDEX_FILE, "rw")) {
 
-            while (indexFile.getFilePointer() < indexFile.length()) {
-                String indexIsbn = indexFile.readUTF();
-                long pointer = indexFile.readLong();
-                if (indexIsbn.equals(isbn)) {
-                    dataFile.seek(pointer);
-                    writeManga(dataFile, newManga);
-                    return;
-                }
+            long pointer = findMangaPointer(isbn, indexFile);
+            if (pointer != -1) {
+                dataFile.seek(pointer);
+                Manga currentManga = readManga(dataFile);
+
+                Manga updatedManga = new Manga(
+                        currentManga.getIsbn(),
+                        getInputWithDefault("Título", currentManga.getTitulo(), scanner),
+                        getInputWithDefault("Autor", currentManga.getAutor(), scanner),
+                        getInputWithDefault("Ano de Início", currentManga.getAnoInicio(), scanner),
+                        getInputWithDefault("Ano de Fim", currentManga.getAnoFim(), scanner),
+                        getInputWithDefault("Gênero", currentManga.getGenero(), scanner),
+                        getInputWithDefault("Revista", currentManga.getRevista(), scanner),
+                        getInputWithDefault("Editora", currentManga.getEditora(), scanner),
+                        getInputWithDefault("Ano da Edição", currentManga.getAnoEdicao(), scanner),
+                        getInputWithDefault("Quantidade de Volumes", currentManga.getQuantidadeVolumes(), scanner),
+                        getInputWithDefault("Quantidade de Volumes Adquiridos", currentManga.getQuantidadeVolumesAdquiridos(), scanner),
+                        getInputVolumesAdquiridos(currentManga.getVolumesAdquiridos(), scanner)
+                );
+
+                dataFile.seek(pointer);
+                writeManga(dataFile, updatedManga);
+
+                System.out.println("Mangá atualizado com sucesso.");
+            } else {
+                System.out.println("Mangá não encontrado.");
             }
+
         } catch (IOException e) {
             throw new IOException("Erro ao atualizar mangá: " + e.getMessage(), e);
         }
+    }
+
+    private long findMangaPointer(String isbn, RandomAccessFile indexFile) throws IOException {
+        while (indexFile.getFilePointer() < indexFile.length()) {
+            String indexIsbn = indexFile.readUTF();
+            long pointer = indexFile.readLong();
+            if (indexIsbn.equals(isbn)) {
+                return pointer;
+            }
+        }
+        return -1;
+    }
+
+    private int[] getInputVolumesAdquiridos(int[] currentVolumes, Scanner scanner) {
+        int[] updatedVolumes = new int[100];
+        System.out.print("Volumes Adquiridos (atual: ");
+        for (int i = 0; i < currentVolumes.length; i++) {
+            if (currentVolumes[i] != 0) {
+                System.out.print(currentVolumes[i] + " ");
+            }
+        }
+        System.out.print("): ");
+
+        String input = scanner.nextLine();
+        if (input.trim().isEmpty()) {
+            // Se o usuário apenas pressionou Enter, mantenha os volumes atuais
+            return currentVolumes;
+        }
+
+        String[] inputs = input.trim().split("\\s+");
+        for (int i = 0; i < inputs.length && i < currentVolumes.length; i++) {
+            if ("-1".equals(inputs[i])) {
+                break;
+            }
+            updatedVolumes[i] = Integer.parseInt(inputs[i]);
+        }
+        return updatedVolumes;
+    }
+
+
+    private String getInputWithDefault(String prompt, String currentValue, Scanner scanner) {
+        System.out.print(prompt + " (atual: " + currentValue + "): ");
+        String input = scanner.nextLine();
+        return input.isEmpty() ? currentValue : input;
+    }
+
+    private int getInputWithDefault(String prompt, int currentValue, Scanner scanner) {
+        System.out.print(prompt + " (atual: " + currentValue + "): ");
+        String input = scanner.nextLine();
+        return input.isEmpty() ? currentValue : Integer.parseInt(input);
     }
 
     public void deleteManga(String isbn, Scanner scanner) throws IOException {
@@ -203,23 +271,8 @@ public class MangaDatabase {
     }
 
     private static Manga getMangaDetails(Scanner scanner) {
-        String isbn;
-        boolean isbnExists;
-
-        do {
-            System.out.print("ISBN: ");
-            isbn = scanner.nextLine();
-            try {
-                isbnExists = checkDuplicateISBN(isbn);
-                if (isbnExists) {
-                    System.out.println("ISBN já existe. Por favor, digite um ISBN diferente.");
-                }
-            } catch (IOException e) {
-                System.out.println("Erro ao verificar ISBN: " + e.getMessage());
-                isbnExists = true; // Tratar como se o ISBN já existisse para forçar nova entrada
-            }
-        } while (isbnExists);
-
+        System.out.print("ISBN: ");
+        String isbn = scanner.nextLine();
         System.out.print("Título: ");
         String titulo = scanner.nextLine();
         System.out.print("Autor: ");
@@ -228,7 +281,7 @@ public class MangaDatabase {
         int anoInicio = scanner.nextInt();
         System.out.print("Ano de Fim: ");
         int anoFim = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline
+        scanner.nextLine(); // Consumir a nova linha pendente
         System.out.print("Gênero: ");
         String genero = scanner.nextLine();
         System.out.print("Revista: ");
@@ -246,9 +299,10 @@ public class MangaDatabase {
         for (int i = 0; i < quantidadeVolumesAdquiridos; i++) {
             volumesAdquiridos[i] = scanner.nextInt();
         }
-        scanner.nextLine(); // Consume the newline
+        scanner.nextLine(); // Consumir a nova linha pendente após a entrada dos volumes adquiridos
         return new Manga(isbn, titulo, autor, anoInicio, anoFim, genero, revista, editora, anoEdicao, quantidadeVolumes, quantidadeVolumesAdquiridos, volumesAdquiridos);
     }
+
 
     private static boolean checkDuplicateISBN(String isbn) throws IOException {
         try (RandomAccessFile indexFile = new RandomAccessFile(INDEX_FILE, "r")) {
